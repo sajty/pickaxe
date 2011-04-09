@@ -1,7 +1,7 @@
 --This will allow to build visual studio 2008 and Xcode 4 native project files for Ember!
---This script needs to be runned with premake4: http://industriousone.com/scripting-reference
---for force restart, run: premake4 --redownload --reinstall vs2008
---read "premake4 --help" for more info
+--This script needs to be used with premake4: http://industriousone.com/scripting-reference
+--for force restart, use: premake4 --redownload --reinstall vs2008
+--read "premake4 --help" for all options
 newoption {
    trigger     = "redownload",
    description = "will redownload and reinstall everything"
@@ -68,7 +68,7 @@ solution "WorldForge"
 		tmpdir="worldforge/atlas-cpp/Atlas/"
 		files { tmpdir .. "**.h", tmpdir .. "**.cpp", tmpdir .. "**.c" }
 		excludes {
-			--tmpdir .. "Bindings/**",
+			tmpdir .. "Bindings/**",
 			tmpdir .. "Codecs/XMLish.cpp",
 			tmpdir .. "Message/Layer.*",
 			tmpdir .. "Factory.*"
@@ -124,68 +124,34 @@ solution "WorldForge"
 			"dep/dirent"
 		}
 		defines { "TIXML_USE_STL" }
---[[
-not implemented yet:
-	project "EntityMapping"
-		kind "StaticLib"
-	project "Lua"
-		kind "StaticLib"
-	project "Caelum"
-		kind "StaticLib"
-	project "MeshTree"
-		kind "StaticLib"
-	project "pagedgeometry"
-		kind "StaticLib"
-	project "EmberPagingSceneManager"
-		kind "StaticLib"
-	project "EmberOgre"
-		kind "StaticLib"
-	project "Extensions"
-		kind "StaticLib"
-	project "Framework"
-		kind "StaticLib"
-	project "Tasks"
-		kind "StaticLib"
-	project "Services"
-		kind "StaticLib"
-	project "lua_EmberServices"
-		kind "StaticLib"
-	project "ConfigService"
-		kind "StaticLib"
-	project "InputService"
-		kind "StaticLib"
-	project "LoggingService"
-		kind "StaticLib"
-	project "MetaServerService"
-		kind "StaticLib"
-	project "ScriptingService"
-		kind "StaticLib"
-	project "ServerService"
-		kind "StaticLib"
-	project "ServerSettings"
-		kind "StaticLib"
-	project "SoundService"
-		kind "StaticLib"
-	project "Time"
-		kind "StaticLib"
-	project "Wfut"
-		kind "StaticLib"
-	project "lua_Main"
-		kind "StaticLib"
---]]
+		
+--Ember starts here!
 
+	ember_src = "worldforge/ember/src/"
+	
+	--libraries to link Ember
+	ember_links = {
+		"ws2_32",
+		"sigcpp",
+		"varconf",
+		"wfmath",
+		"skstream",
+		"mercerator",
+		"eris"
+	}
+	
+	--include directories
 	ember_includes = {
+		"worldforge/ember/src_tolua",
+		ember_src,
+		ember_src .. "components/ogre/environment/caelum/include",
+		ember_src .. "components/ogre/environment/pagedgeometry/include",
 		"worldforge/varconf",
 		"worldforge/wfmath",
 		"worldforge/skstream",
 		"worldforge/atlas-cpp",
 		"worldforge/mercator",
 		"worldforge/eris",
-		"worldforge/ember/src",
-		"worldforge/ember/src/components/ogre/environment/pagedgeometry/include",
-		"worldforge/ember/src/components/ogre/ogreopcode/include",
-		"worldforge/ember/src/components/ogre/environment/pagedgeometry/include",
-		"worldforge/ember/src/components/ogre/environment/caelum/include",
 		"dep/libsigc++-2.2.9/MSVC_Net2008",
 		"dep/libsigc++-2.2.9",
 		"dep/tolua++/tolua++-1.0.93/include",
@@ -196,54 +162,130 @@ not implemented yet:
 		"dep/SDL-1.2.14/include",
 		"dep/OgreSDK_vc9_v1-7-2/include/OGRE",
 		"dep/OgreSDK_vc9_v1-7-2/boost_1_44",
+		"dep/libcurl/include",
 	}
+	
+	--preprocessor definitions
+	ember_defines = {
+		"HAVE_CONFIG_H",
+		'PREFIX="."',
+		'EMBER_SYSCONFDIR="."',
+		'EMBER_DATADIR="./media"',
+	}
+	
+	--excluded files
+	ember_excludes = {
+		ember_src .. "components/carpenter/**",
+		ember_src .. "components/ogre/jesus/**",
+		ember_src .. "components/ogre/ogreopcode/**",
+		ember_src .. "components/ogre/environment/hydrax/**",
+		ember_src .. "components/ogre/environment/HydraxWater.*",
+		ember_src .. "components/ogre/environment/IngameEventsWidget.*",
+		ember_src .. "components/ogre/environment/JesusEdit.*",
+		ember_src .. "components/ogre/environment/Opcode*",
+		ember_src .. "framework/ServiceManager.*",
+		ember_src .. "framework/ConfigBoundLogObserver.*",
+		ember_src .. "main/macosx/**",
+	}
+--this will add files to subproject and automatically exclude from ember main project
+function ember_subproject_files(myfiles)
+	files(myfiles)
+	excludes ( ember_excludes )
+	for k,v in ipairs(myfiles) do table.insert(ember_excludes, v) end
+end
+--will create a staticlib with all files in given folder
+function ember_subproject(name, dir)
+	table.insert(ember_links, name)
+	project(name)
+		kind "StaticLib"
+		ember_subproject_files { dir .. "/**.h", dir .. "/**.cpp", dir .. "/**.c" }
+		includedirs(ember_includes)
+		defines(ember_defines)
+	
+end
 
-function create_tolua_project(pkgfile)
+--this will generate a tolua binding
+function ember_tolua_project(pkgfile)
 	local dir = os.getcwd() .. "/" --current working dir
 	local tolua = dir .. "dep/tolua++/tolua++" --tolua location
 	local name = path.getbasename(pkgfile) --project name
 	local outfolder = dir .. "worldforge/ember/src_tolua/"
 	local outfile = outfolder .. name .. ".cxx"
-	os.mkdir( outfolder )
 	
 	print("Generating lua_" .. name)
+	os.mkdir( outfolder )	
 	os.chdir( path.getdirectory( dir .. pkgfile))
 		os.execute(tolua .. " -o " .. outfile .. " " .. path.getname(pkgfile))
 	os.chdir(dir)
 	
+	table.insert(ember_links, "lua_" .. name)
 	project("lua_" .. name)
 		kind "StaticLib"
 		files { outfile }
+		local tmp = path.getdirectory( dir .. pkgfile) .. "/required.h"
+		if os.isfile( tmp ) then
+			ember_subproject_files { tmp }
+		end
 		includedirs { path.getdirectory( dir .. pkgfile) }
 		includedirs(ember_includes)
-end
+		defines(ember_defines)
 	
-	create_tolua_project("worldforge/ember/src/bindings/lua/ConnectorDefinitions.pkg")
-	create_tolua_project("worldforge/ember/src/components/lua/bindings/lua/Lua.pkg")
-	create_tolua_project("worldforge/ember/src/components/ogre/scripting/bindings/lua/EmberOgre.pkg")
-	create_tolua_project("worldforge/ember/src/components/ogre/scripting/bindings/lua/helpers/Helpers.pkg")
-	create_tolua_project("worldforge/ember/src/components/ogre/scripting/bindings/lua/ogre/Ogre.pkg")
-	create_tolua_project("worldforge/ember/src/components/ogre/widgets/adapters/atlas/bindings/lua/AtlasAdapters.pkg")
-	create_tolua_project("worldforge/ember/src/framework/bindings/lua/Framework.pkg")
-	create_tolua_project("worldforge/ember/src/framework/bindings/lua/atlas/Atlas.pkg")
-	create_tolua_project("worldforge/ember/src/framework/bindings/lua/eris/Eris.pkg")
-	create_tolua_project("worldforge/ember/src/framework/bindings/lua/varconf/Varconf.pkg")
-	project "ember"
-		kind "ConsoleApp"
-		tmpdir="worldforge/ember/src/"
-		files { tmpdir .. "**.h", tmpdir .. "**.cpp", tmpdir .. "**.c" }
-		defines { "PACKAGE", "ICE_NO_DLL" }
-		includedirs(ember_includes)
-		links {
-			"ws2_32",
-			"sigcpp",
-			"varconf",
-			"wfmath",
-			"skstream",
-			"mercerator",
-			"eris"
-		}
+end
+	ember_tolua_project(ember_src .. "bindings/lua/ConnectorDefinitions.pkg")
+	project "lua_ConnectorDefinitions" --extend with extra files
+		ember_subproject_files { ember_src .. "bindings/lua/TypeResolving.*" }
 		
+	ember_tolua_project(ember_src .. "components/lua/bindings/lua/Lua.pkg")
+	ember_tolua_project(ember_src .. "components/ogre/scripting/bindings/lua/EmberOgre.pkg")
+	ember_tolua_project(ember_src .. "components/ogre/scripting/bindings/lua/helpers/Helpers.pkg")
+	project "lua_Helpers"
+		ember_subproject_files { ember_src .. "bindings/lua/OgreUtils.*" }
+
+	ember_tolua_project(ember_src .. "components/ogre/scripting/bindings/lua/ogre/Ogre.pkg")
+	ember_tolua_project(ember_src .. "components/ogre/widgets/adapters/atlas/bindings/lua/AtlasAdapters.pkg")
+	ember_tolua_project(ember_src .. "framework/bindings/lua/Framework.pkg")
+	ember_tolua_project(ember_src .. "framework/bindings/lua/atlas/Atlas.pkg")
+	ember_tolua_project(ember_src .. "framework/bindings/lua/eris/Eris.pkg")
+	ember_tolua_project(ember_src .. "framework/bindings/lua/varconf/Varconf.pkg")
+	ember_tolua_project(ember_src .. "main/bindings/lua/Application.pkg")
+	ember_tolua_project(ember_src .. "services/bindings/lua/EmberServices.pkg")
+	
+	ember_subproject("EntityMapping", ember_src .. "components/entitymapping")
+	ember_subproject("Lua", ember_src .. "components/lua")
+	ember_subproject("Caelum", ember_src .. "components/ogre/environment/caelum")
+	project "Caelum"
+		defines { "CAELUM_LIB" }
+		kind "SharedLib"
+		
+	ember_subproject("MeshTree", ember_src .. "components/ogre/environment/meshtree")
+	ember_subproject("pagedgeometry", ember_src .. "components/ogre/environment/pagedgeometry")
+	ember_subproject("EmberPagingSceneManager", ember_src .. "components/ogre/SceneManagers/EmberPagingSceneManager")
+	--defines { "OGRE_PCZPLUGIN_EXPORTS", "Plugin_PCZSceneManager_EXPORTS" }
+	ember_subproject("EmberOgre", ember_src .. "components/ogre")
+	ember_subproject("Tasks", ember_src .. "framework/tasks")
+	ember_subproject("Framework", ember_src .. "framework")
+	ember_subproject("ConfigService", ember_src .. "services/config")
+	ember_subproject("InputService", ember_src .. "services/input")
+	ember_subproject("LoggingService", ember_src .. "services/logging")
+	ember_subproject("MetaserverService", ember_src .. "services/metaserver")
+	ember_subproject("ScriptingService", ember_src .. "services/scripting")
+	ember_subproject("ServerService", ember_src .. "services/server")
+	ember_subproject("ServerSettings", ember_src .. "services/serversettings")
+	ember_subproject("SoundService", ember_src .. "services/sound")
+	ember_subproject("Time", ember_src .. "services/time")
+	ember_subproject("Wfut", ember_src .. "services/wfut")
+	ember_subproject("Services", ember_src .. "services")
+	
+	project "Ember"
+		kind "ConsoleApp"
+		files { ember_src .. "**.h", ember_src .. "**.cpp", ember_src .. "**.c" }
+		files { ember_src .. "main/win32/OgreWin32Resources.rc" }
+		excludes ( ember_excludes )
+		includedirs(ember_includes)
+		defines(ember_defines)
+		links(ember_links)
+	
+--Footer
 	os.mkdir("prj")
 	--loop through all projects and do some post-processing
 	local prjs = solution().projects

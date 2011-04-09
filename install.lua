@@ -125,7 +125,7 @@ function install()
 	extract(tmp, "dep/pthreads-w32")
 
 	tmp = "dl/libcurl-7.19.3-win32-ssl-msvc.zip"
-	download("ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-8-0-release.exe", tmp)
+	download("http://curl.linux-mirror.org/download/libcurl-7.19.3-win32-ssl-msvc.zip", tmp)
 	extract(tmp, "dep/libcurl")
 	
 	tmp = "dl/dirent-1.10.zip"

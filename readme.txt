@@ -1,6 +1,6 @@
-+++++++++++
-++ pickaxe  ++
-+++++++++++
++++++++++++++
+++ pickaxe ++
++++++++++++++
 
 prerequisites:
 	-install visual c++ 2008 SP1 professional
