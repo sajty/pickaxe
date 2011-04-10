@@ -212,6 +212,9 @@ function install()
 	os.mkdir("bin/media")
 	os.execute('"' .. rsync .. '" -rtvzu amber.worldforge.org::media-dev bin/media')	
 	
+	--copy contents of "./files" folder to the root. This will copy config.h files
+	os.execute("xcopy files . /Q /Y /E /I")
+	
 	--touch lock file, which will be checked by isInstalled() function
 	local f = io.open("dep/installed.lock", "w+")
 	f:write("If you delete this file, premake4 will reinstall everything")

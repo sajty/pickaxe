@@ -25,7 +25,7 @@ if not isInstalled() then
 	install()
 end
 
---configure project file
+--configure project files
 solution "WorldForge"
 	
 	configurations { "Debug", "Release" }
@@ -56,6 +56,7 @@ solution "WorldForge"
 		files { tmpdir .. "**.h", tmpdir .. "**.cpp", tmpdir .. "**.c" }
 		includedirs { "worldforge/varconf", "dep/libsigc++-2.2.9", "dep/libsigc++-2.2.9/MSVC_Net2008" }
 		--links { "sigcpp" }
+		defines { "HAVE_CONFIG_H" }
 	project "skstream"
 		kind "StaticLib"
 		tmpdir="worldforge/skstream/skstream/"
@@ -63,6 +64,7 @@ solution "WorldForge"
 		defines { "HAVE_GAI_STRERROR" }
 		includedirs { "worldforge/skstream" }
 		--links { "ws2_32" }
+		defines { "HAVE_CONFIG_H" }
 	project "atlas-cpp"
 		kind "StaticLib"
 		tmpdir="worldforge/atlas-cpp/Atlas/"
@@ -78,6 +80,7 @@ solution "WorldForge"
 			"dep/CEGUI-SDK-0.7.5-vc9/dependencies/include",
 			"dep/bzip2/include"
 		}
+		defines { "HAVE_CONFIG_H" }
 	project "wfmath"
 		kind "StaticLib"
 		tmpdir="worldforge/wfmath/wfmath/"
@@ -85,24 +88,24 @@ solution "WorldForge"
 		excludes { "worldforge/wfmath/wfmath/*_test*" }
 		excludes { "worldforge/wfmath/wfmath/unused/*" }
 		includedirs { "worldforge/wfmath", tmpdir }
+		defines { "HAVE_CONFIG_H" }
 	project "mercator"
 		kind "StaticLib"
 		tmpdir="worldforge/mercator/Mercator/"
 		files { tmpdir .. "**.h", tmpdir .. "**.cpp", tmpdir .. "**.c" }
 		includedirs { "worldforge/mercator", "worldforge/wfmath", tmpdir }
-		defines { "PACKAGE" }
 		--links { "wfmath" }
+		defines { "HAVE_CONFIG_H" }
 	project "eris"
 		kind "StaticLib"
 		tmpdir="worldforge/eris/Eris/"
 		files { tmpdir .. "**.h", tmpdir .. "**.cpp", tmpdir .. "**.c" }
 		excludes { tmpdir .. "UIFactory.*" }
-		defines { "PACKAGE" }
 		includedirs {
+			"worldforge/eris",
 			"worldforge/mercator",
 			"worldforge/skstream",
 			"worldforge/atlas-cpp",
-			"worldforge/eris",
 			"worldforge/wfmath",
 			"dep/CEGUI-SDK-0.7.5-vc9/dependencies/include",
 			"dep/libcurl/include",
@@ -110,6 +113,7 @@ solution "WorldForge"
 			"dep/libsigc++-2.2.9/MSVC_Net2008",
 			"dep/dirent"
 		}
+		defines { "HAVE_CONFIG_H" }
 		--links { "sigcpp" }
 	project "libwfut"
 		kind "StaticLib"
@@ -123,7 +127,7 @@ solution "WorldForge"
 			"dep/libsigc++-2.2.9/MSVC_Net2008",
 			"dep/dirent"
 		}
-		defines { "TIXML_USE_STL" }
+		defines { "TIXML_USE_STL", "HAVE_CONFIG_H" }
 		
 --Ember starts here!
 
@@ -142,7 +146,6 @@ solution "WorldForge"
 	
 	--include directories
 	ember_includes = {
-		"worldforge/ember/src_tolua",
 		ember_src,
 		ember_src .. "components/ogre/environment/caelum/include",
 		ember_src .. "components/ogre/environment/pagedgeometry/include",
@@ -169,8 +172,8 @@ solution "WorldForge"
 	ember_defines = {
 		"HAVE_CONFIG_H",
 		'PREFIX="."',
-		'EMBER_SYSCONFDIR="."',
-		'EMBER_DATADIR="./media"',
+		'EMBER_SYSCONFDIR="/"',
+		'EMBER_DATADIR="/media"',
 	}
 	
 	--excluded files
@@ -180,57 +183,58 @@ solution "WorldForge"
 		ember_src .. "components/ogre/ogreopcode/**",
 		ember_src .. "components/ogre/environment/hydrax/**",
 		ember_src .. "components/ogre/environment/HydraxWater.*",
-		ember_src .. "components/ogre/environment/IngameEventsWidget.*",
+		ember_src .. "components/ogre/widgets/IngameEventsWidget.*",
 		ember_src .. "components/ogre/environment/JesusEdit.*",
 		ember_src .. "components/ogre/environment/Opcode*",
 		ember_src .. "framework/ServiceManager.*",
-		ember_src .. "framework/ConfigBoundLogObserver.*",
 		ember_src .. "main/macosx/**",
 	}
---this will add files to subproject and automatically exclude from ember main project
-function ember_subproject_files(myfiles)
-	files(myfiles)
-	excludes ( ember_excludes )
-	for k,v in ipairs(myfiles) do table.insert(ember_excludes, v) end
-end
---will create a staticlib with all files in given folder
-function ember_subproject(name, dir)
-	table.insert(ember_links, name)
-	project(name)
-		kind "StaticLib"
-		ember_subproject_files { dir .. "/**.h", dir .. "/**.cpp", dir .. "/**.c" }
-		includedirs(ember_includes)
-		defines(ember_defines)
-	
-end
+	--this will add files to subproject and automatically exclude from ember main project
+	function ember_subproject_files(myfiles)
+		files(myfiles)
+		excludes ( ember_excludes )
+		for k,v in ipairs(myfiles) do table.insert(ember_excludes, v) end
+	end
+	--will create a staticlib with all files in given folder
+	function ember_subproject(name, dir)
+		table.insert(ember_links, name)
+		project(name)
+			kind "StaticLib"
+			ember_subproject_files { dir .. "/**.h", dir .. "/**.cpp", dir .. "/**.c" }
+			includedirs(ember_includes)
+			defines(ember_defines)
+		
+	end
 
---this will generate a tolua binding
-function ember_tolua_project(pkgfile)
-	local dir = os.getcwd() .. "/" --current working dir
-	local tolua = dir .. "dep/tolua++/tolua++" --tolua location
-	local name = path.getbasename(pkgfile) --project name
-	local outfolder = dir .. "worldforge/ember/src_tolua/"
-	local outfile = outfolder .. name .. ".cxx"
-	
-	print("Generating lua_" .. name)
-	os.mkdir( outfolder )	
-	os.chdir( path.getdirectory( dir .. pkgfile))
-		os.execute(tolua .. " -o " .. outfile .. " " .. path.getname(pkgfile))
-	os.chdir(dir)
-	
-	table.insert(ember_links, "lua_" .. name)
-	project("lua_" .. name)
-		kind "StaticLib"
-		files { outfile }
-		local tmp = path.getdirectory( dir .. pkgfile) .. "/required.h"
-		if os.isfile( tmp ) then
-			ember_subproject_files { tmp }
-		end
-		includedirs { path.getdirectory( dir .. pkgfile) }
-		includedirs(ember_includes)
-		defines(ember_defines)
-	
-end
+	--this will generate a tolua binding
+	function ember_tolua_project(pkgfile)
+		local dir = path.rebase(".",path.getabsolute("."), path.getdirectory(pkgfile)) .. "/" --root dir from pkgfile's directory
+		local tolua = "dep/tolua++/tolua++" --tolua location
+		local name = path.getbasename(pkgfile) --project name
+		local outfolder = "worldforge/ember/src_tolua/"
+		local outfile = outfolder .. name .. ".cxx"
+		
+		print("Generating src_tolua/" .. name .. ".cxx...")
+		os.mkdir( outfolder )
+		os.chdir( path.getdirectory( pkgfile))--change current directory to pkg file
+			local cmd = path.translate(dir .. tolua .. " -o " .. dir .. outfile .. " " .. path.getname(pkgfile) )
+			--print( cmd )
+			os.execute( cmd )
+		os.chdir(dir)--change current directory back to root
+		
+		table.insert(ember_links, "lua_" .. name)--link project to ember
+		project("lua_" .. name)
+			kind "StaticLib"
+			files { outfile }
+			local tmp = path.getdirectory( dir .. pkgfile) .. "/required.h"
+			if os.isfile( tmp ) then
+				ember_subproject_files { tmp }
+			end
+			includedirs { path.getdirectory( dir .. pkgfile) }
+			includedirs(ember_includes)
+			defines(ember_defines)
+		
+	end
 	ember_tolua_project(ember_src .. "bindings/lua/ConnectorDefinitions.pkg")
 	project "lua_ConnectorDefinitions" --extend with extra files
 		ember_subproject_files { ember_src .. "bindings/lua/TypeResolving.*" }
@@ -260,7 +264,6 @@ end
 	ember_subproject("MeshTree", ember_src .. "components/ogre/environment/meshtree")
 	ember_subproject("pagedgeometry", ember_src .. "components/ogre/environment/pagedgeometry")
 	ember_subproject("EmberPagingSceneManager", ember_src .. "components/ogre/SceneManagers/EmberPagingSceneManager")
-	--defines { "OGRE_PCZPLUGIN_EXPORTS", "Plugin_PCZSceneManager_EXPORTS" }
 	ember_subproject("EmberOgre", ember_src .. "components/ogre")
 	ember_subproject("Tasks", ember_src .. "framework/tasks")
 	ember_subproject("Framework", ember_src .. "framework")
@@ -275,7 +278,7 @@ end
 	ember_subproject("Time", ember_src .. "services/time")
 	ember_subproject("Wfut", ember_src .. "services/wfut")
 	ember_subproject("Services", ember_src .. "services")
-	
+
 	project "Ember"
 		kind "ConsoleApp"
 		files { ember_src .. "**.h", ember_src .. "**.cpp", ember_src .. "**.c" }
