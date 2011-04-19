@@ -14,16 +14,22 @@
 #endif
 
 /* Define to 1 if you have the `lrintf' function. */
-#define HAVE_LRINTF 1
+#ifndef _MSC_VER
+#	define HAVE_LRINTF 1
+#endif
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the `rint' function. */
-#define HAVE_RINT 1
+#ifndef _MSC_VER
+#	define HAVE_RINT 1
+#endif
 
 /* Define to 1 if you have the `rintf' function. */
-#define HAVE_RINTF 1
+#ifndef _MSC_VER
+#	define HAVE_RINTF 1
+#endif
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #ifndef _MSC_VER

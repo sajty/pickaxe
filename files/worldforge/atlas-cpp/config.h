@@ -1,8 +1,9 @@
 /* Atlas-C++ universal config file  */
 
 /* Define to 1 if you have the <bzlib.h> header file. */
-#define HAVE_BZLIB_H 1
-
+#ifndef _MSC_VER
+#	define HAVE_BZLIB_H 1
+#endif
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #ifndef _MSC_VER
 #   define HAVE_DLFCN_H 1
@@ -14,7 +15,9 @@
 #endif
 
 /* "True if libbz2 is available" */
-#define HAVE_LIBBZ2 1
+#ifndef _MSC_VER
+#	define HAVE_LIBBZ2 1
+#endif
 
 /* "True if zlib is available" */
 #define HAVE_LIBZ 1

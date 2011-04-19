@@ -97,7 +97,9 @@
 #define PACKAGE_VERSION "0.3.8"
 
 /* Define if unix domain sockets are supported */
-#define SKSTREAM_UNIX_SOCKETS 1
+#ifndef _MSC_VER
+#	define SKSTREAM_UNIX_SOCKETS 1
+#endif
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
