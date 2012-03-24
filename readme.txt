@@ -3,6 +3,9 @@
 +++++++++++++
 
 prerequisites:
+	-DirectX SDK
+	-OpenAL SDK and you need to set OPENAL_DIR environment variable
+
 	-install visual c++ 2008 SP1 professional
 OR
 	-install visual C++ 2008 sp1 express:
@@ -14,8 +17,8 @@ included prerequisites:
 	-curl: http://curl.freeby.pctools.cl/download/curl-7.19.5-win32-nossl.zip
 	-premake4: http://sourceforge.net/projects/premake/files/Premake/4.3/premake-4.3-windows.zip/download
 usage:
-	-run build_vs2008.bat: this will automatically download and install everything needed.
-	-start worldforge.sln
+	-run vs2008_gen-ember.bat: this will install dependencies and generate the visual studio project file
+	-start ember.sln
 command-line usage: read "premake4 --help"
 	example: "premake4 --reinstall vs2008"
 bugs:
