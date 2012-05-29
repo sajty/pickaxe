@@ -229,6 +229,8 @@ solution(project_name)
 		"zlib",
 		"curl",
 		"freealut",
+		"SDL",
+		"SDLmain"
 	}
 	
 	if _ACTION == "vs2008" then
@@ -273,7 +275,7 @@ solution(project_name)
 		include_dir .. "/lua",
 		include_dir .. "/zlib",
 		include_dir .. "/cegui",
-		--include_dir .. "/SDL",
+		include_dir .. "/SDL",
 		include_dir .. "/OGRE",
 		include_dir .. "/boost",
 		include_dir,

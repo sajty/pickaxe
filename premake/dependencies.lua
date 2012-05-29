@@ -13,9 +13,10 @@ function build_binaries()
 --DLLs
 	os.mkdir(bin_dir)
 	os.mkdir(bin_d_dir)
-	--[[
+	
 	os.copyfile(dep_dir .. "/SDL-1.2.14/lib/SDL.dll", bin_dir .. "/SDL.dll")
 	os.copyfile(dep_dir .. "/SDL-1.2.14/lib/SDL.dll", bin_d_dir .. "/SDL.dll")
+	--[[
 	os.copyfile(dep_dir .. "/freealut-1.1.0-bin/lib/alut.dll", bin_dir .. "/alut.dll")
 	os.copyfile(dep_dir .. "/freealut-1.1.0-bin/lib/alut.dll", bin_d_dir .. "/alut.dll")
 	os.copydir(dep_dir .. "/libcurl/src/DLL-Release", bin_dir, "*.dll")
@@ -68,7 +69,7 @@ function build_includes()
 	os.copydir( dep_dir .. "/curl-7.25.0/include", include_dir, "**.h" )
 	
 	--os.copydir( dep_dir .. "/libcurl/include/curl", include_dir .. "/curl", "**.h" )
-	--os.copydir( dep_dir .. "/SDL-1.2.14/include", include_dir .. "/SDL" )
+	os.copydir( dep_dir .. "/SDL-1.2.14/include", include_dir .. "/SDL" )
 	os.copydir( dep_dir .. "/libsigc++-2.2.9/sigc++", include_dir .. "/sigc++", "**.h" )
 	os.copydir( dep_dir .. "/libsigc++-2.2.9/MSVC_Net2008", include_dir, "**.h" )
 	--os.copydir( dep_dir .. "/tolua++/tolua++-1.0.93/include", include_dir .. "/tolua++")
@@ -104,9 +105,9 @@ function install_dependencies()
 	download("http://prdownloads.sourceforge.net/crayzedsgui/" .. CeguiSDK_dir .. ".zip?download", tmp)
 	extract(tmp, dep_dir)
 	
-	--tmp = dl_dir .. "/SDL-devel-1.2.14-VC8.zip"
-	--download("http://www.libsdl.org/release/SDL-devel-1.2.14-VC8.zip", tmp)
-	--extract(tmp, dep_dir)
+	tmp = dl_dir .. "/SDL-devel-1.2.14-VC8.zip"
+	download("http://www.libsdl.org/release/SDL-devel-1.2.14-VC8.zip", tmp)
+	extract(tmp, dep_dir)
 
 	--tmp = dl_dir .. "/libcurl-7.19.3-win32-ssl-msvc.zip"
 	--download("http://curl.linux-mirror.org/download/libcurl-7.19.3-win32-ssl-msvc.zip", tmp)
